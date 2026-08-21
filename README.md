@@ -34,9 +34,26 @@ Sincronización y Dead-Locks.
 	* Cada jugador, permanentemente, ataca a algún otro inmortal. El que primero ataca le resta M puntos de vida a su contrincante, y aumenta en esta misma cantidad sus propios puntos de vida.
 	* El juego podría nunca tener un único ganador. Lo más probable es que al final sólo queden dos, peleando indefinidamente quitando y sumando puntos de vida.
 
-2. Revise el código e identifique cómo se implemento la funcionalidad antes indicada. Dada la intención del juego, un invariante debería ser que la sumatoria de los puntos de vida de todos los jugadores siempre sea el mismo(claro está, en un instante de tiempo en el que no esté en proceso una operación de incremento/reducción de tiempo). Para este caso, para N jugadores, cual debería ser este valor?.
 
-3. Ejecute la aplicación y verifique cómo funcionan las opción ‘pause and check’. Se cumple el invariante?.
+2. Revise el código e identifique cómo se implemento la funcionalidad antes indicada. 
+   Dada la intención del juego, un invariante debería ser que la sumatoria de los puntos de vida de todos los jugadores siempre sea el mismo(claro está, en un instante de tiempo en el que no esté en proceso una operación de incremento/reducción de tiempo). Para este caso, para N jugadores, cual debería ser este valor?.
+
+
+	R/ El logica de la funcionalidad es que cada jugador recupera vida deacuerdo ala vida que le quita al otro jugador,
+	y deacuardo a lo que deberia pasar el jugador tendria que curarse mucho menos de lo que hace daño , para que este no entre en un ciclo de invensibilidad en el cual ninguno de los jugadores se puedan matar.
+    ahora dado que cada operación fight preserva la vida total y no añade ni destruye puntos de salud, el valor que la sumatoria debe mantener en todo momento es:
+
+--
+	$$\text{Invariante} = N \times\text{DEFAULT HEALTH}$$
+
+
+3. Ejecute la aplicación y verifique cómo funcionan las opciones ‘pause and check’. Se cumple el invariante?.
+
+	![img.png](img.png)
+	
+	R/ En este caso la funcionalidad no esta completa , por lo cual el boton ‘pause and check’ actualmente solo muestra la informacion de la vida y de los jugadores en una parte de la aplicacion,
+	sin llegar a detener la ejecucion del codigo.
+
 
 4. Una primera hipótesis para que se presente la condición de carrera para dicha función (pause and check), es que el programa consulta la lista cuyos valores va a imprimir, a la vez que otros hilos modifican sus valores. Para corregir esto, haga lo que sea necesario para que efectivamente, antes de imprimir los resultados actuales, se pausen todos los demás hilos. Adicionalmente, implemente la opción ‘resume’.
 
