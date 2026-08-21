@@ -10,9 +10,72 @@
 Control de hilos con wait/notify. Productor/consumidor.
 
 1. Revise el funcionamiento del programa y ejecútelo. Mientras esto ocurren, ejecute jVisualVM y revise el consumo de CPU del proceso correspondiente. A qué se debe este consumo?, cual es la clase responsable?
+
+![img_1.png](img_1.png)
+
+Al ejecutar la aplicación y revisarla con jVisualVM, se observa que uno de
+los hilos (Thread-1, correspondiente a Consumer) se mantiene en estado
+"Running" el 100% del tiempo, mientras que el hilo del Producer (Thread-0)
+pasa la mayor parte del tiempo en "Wait".
+
+![img.png](img_m.png)
+
+Esto se debe a que Consumer.run() implementa un ciclo while(true) que
+consulta continuamente el tamaño de la cola (queue.size() > 0) sin ningún
+mecanismo de espera o bloqueo. Cuando la cola está vacía, el hilo sigue
+iterando sin detenerse, generando espera activa (busy-waiting) y
+manteniendo un núcleo de CPU ocupado permanentemente. La clase
+responsable de este consumo es Consumer.
+
 2. Haga los ajustes necesarios para que la solución use más eficientemente la CPU, teniendo en cuenta que -por ahora- la producción es lenta y el consumo es rápido. Verifique con JVisualVM que el consumo de CPU se reduzca.
+
+Se modificaron Consumer y Producer para sincronizar el acceso a la cola
+compartida usando wait()/notify() en lugar de espera activa: cuando no
+hay elementos que consumir (o se llegó al límite de stock), el hilo
+correspondiente se suspende con wait() en vez de seguir preguntando en
+un ciclo sin parar. Cada vez que se agrega o se retira un elemento, se
+notifica al otro hilo con notifyAll().
+
+Al revisar nuevamente con jVisualVM se observa que el uso de CPU se
+mantiene en 0% de forma sostenida (antes se mantenía cerca del 100%
+por la espera activa del Consumer original).
+
+![img_2.png](img_2.png)
+
+Adicionalmente, en la pestaña Threads, tanto Thread-0 (Producer) como
+Thread-1 (Consumer) muestran 0% de tiempo "Running": ambos hilos pasan
+prácticamente todo el tiempo suspendidos (Wait) y solo se activan
+brevemente cuando hay un elemento que producir o consumir.
+
+![img_3.png](img_3.png)
+
+Esto confirma que el consumo de CPU se redujo de manera significativa
+respecto a la versión original.
+
 3. Haga que ahora el productor produzca muy rápido, y el consumidor consuma lento. Teniendo en cuenta que el productor conoce un límite de Stock (cuantos elementos debería tener, a lo sumo en la cola), haga que dicho límite se respete. Revise el API de la colección usada como cola para ver cómo garantizar que dicho límite no se supere. Verifique que, al poner un límite pequeño para el 'stock', no haya consumo alto de CPU ni errores.
 
+Se probó el escenario de producción rápida y consumo lento (Producer con
+sleep de 50ms, Consumer con sleep de 1000ms), manteniendo el límite de
+stock (STOCK_LIMIT = 10) implementado con wait()/notify(): cuando la cola
+alcanza el límite, el Producer se suspende hasta que el Consumer libera
+espacio, en lugar de seguir agregando elementos sin control.
+
+En la consola se observó que, una vez alcanzado el límite, el Producer
+deja de agregar elementos y retoma la producción solo cuando el Consumer
+consume uno (patrón 1 a 1), sin que la cola supere el tamaño configurado
+ni se presenten errores o excepciones.
+
+Al revisar con jVisualVM, el uso de CPU se mantuvo en 0% durante toda la
+prueba, y ambos hilos (Thread-0 y Thread-1) permanecieron la mayor parte
+del tiempo en estado de espera, sin actividad continua.
+
+![img_4.png](img_4.png)
+
+![img_5.png](img_5.png)
+
+Esto confirma que, incluso con un productor mucho más rápido que el
+consumidor, el límite de stock se respeta sin generar consumo alto de
+CPU ni errores.
 
 ##### Parte II. – Antes de terminar la clase.
 
@@ -20,6 +83,28 @@ Teniendo en cuenta los conceptos vistos de condición de carrera y sincronizaci�
 
 - La búsqueda distribuida se detenga (deje de buscar en las listas negras restantes) y retorne la respuesta apenas, en su conjunto, los hilos hayan detectado el número de ocurrencias requerido que determina si un host es confiable o no (_BLACK_LIST_ALARM_COUNT_).
 - Lo anterior, garantizando que no se den condiciones de carrera.
+
+Se implementó la clase BlackListSearchThread, que revisa un segmento del
+total de servidores. El método checkHost(ipaddress, n) reparte el espacio
+de búsqueda entre n hilos y usa join() para esperar a que todos terminen
+antes de calcular el resultado final.
+
+Para lograr que la búsqueda se detenga apenas se alcanza el número de
+ocurrencias requerido (BLACK_LIST_ALARM_COUNT), sin condiciones de carrera,
+se usó:
+- Un AtomicBoolean compartido (alarmReached) que cada hilo revisa antes de
+  seguir con el siguiente servidor de su segmento.
+- Un bloque synchronized al momento de agregar una ocurrencia encontrada:
+  verifica el conteo actual, agrega el resultado e incrementa el contador
+  compartido como una sola operación atómica, evitando que dos hilos
+  agreguen resultados de más una vez alcanzado el límite.
+
+![img_6.png](img_6.png)
+
+Como se observa en la consola, con 12 hilos solo se revisaron 12.018 de
+los 80.000 servidores antes de detenerse, encontrando correctamente las 5
+ocurrencias esperadas ([23, 50, 200, 500, 1000]) y reportando el host como
+NOT trustworthy, sin necesidad de recorrer el resto de las listas negras.
 
 ##### Parte III. – Avance para el martes, antes de clase.
 
@@ -49,7 +134,7 @@ Sincronización y Dead-Locks.
 
 3. Ejecute la aplicación y verifique cómo funcionan las opciones ‘pause and check’. Se cumple el invariante?.
 
-	![img.png](img.png)
+	![img.png](img_m.png)
 	
 	R/ En este caso la funcionalidad no esta completa , por lo cual el boton ‘pause and check’ actualmente solo muestra la informacion de la vida y de los jugadores en una parte de la aplicacion,
 	sin llegar a detener la ejecucion del codigo.
