@@ -4,7 +4,7 @@
 
 
 #### Ejercicio – programación concurrente, condiciones de carrera y sincronización de hilos. EJERCICIO INDIVIDUAL O EN PAREJAS.
-
+### Nombres - Marco Alvarez - Andres Sabogal
 ##### Parte I – Antes de terminar la clase.
 
 Control de hilos con wait/notify. Productor/consumidor.
@@ -216,8 +216,6 @@ R/ Al hacer clic muchas veces seguidas en el botón Pause and check, no se cumpl
 			* En los bloques anidados de sincronización requeridos para lo anterior, se debe garantizar que si los mismos locks son usados en dos peleas simultánemante, éstos será usados en el mismo orden para evitar deadlocks.
 			* En caso de sincronizar el acceso a la pelea con un LOCK común, se evaluará como M, pues esto hace secuencial todas las peleas.
 			* La lista de inmortales debe reducirse en la medida que éstos mueran, pero esta operación debe realizarse SIN sincronización, sino haciendo uso de una colección concurrente (no bloqueante).
-
-	
 
 	* Funcionalidad:
 		* Se cumple con el invariante al usar la aplicación con 10, 100 o 1000 hilos.
