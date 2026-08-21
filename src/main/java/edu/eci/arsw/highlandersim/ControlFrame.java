@@ -88,18 +88,21 @@ public class ControlFrame extends JFrame {
         btnPauseAndCheck.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
 
-                /*
-				 * COMPLETAR
-                 */
-                int sum = 0;
-                for (Immortal im : immortals) {
-                    sum += im.getHealth();
+                if (immortals != null) {
+                    // 1. Indicar a todos los hilos que deben detenerse
+                    for (Immortal im : immortals) {
+                        im.pauseThread();
+                    }
+
+                    // 2. Calcular la suma total de salud
+                    int sum = 0;
+                    for (Immortal im : immortals) {
+                        sum += im.getHealth();
+                    }
+
+                    // 3. Imprimir el reporte acumulado en la interfaz
+                    statisticsLabel.setText("<html>" + immortals.toString() + "<br>Health sum:" + sum + "</html>");
                 }
-
-                statisticsLabel.setText("<html>"+immortals.toString()+"<br>Health sum:"+ sum);
-                
-                
-
             }
         });
         toolBar.add(btnPauseAndCheck);
@@ -108,10 +111,12 @@ public class ControlFrame extends JFrame {
 
         btnResume.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                /**
-                 * IMPLEMENTAR
-                 */
-
+                if (immortals != null) {
+                    // Reanudar todos los hilos
+                    for (Immortal im : immortals) {
+                        im.resumeThread();
+                    }
+                }
             }
         });
 
@@ -128,9 +133,20 @@ public class ControlFrame extends JFrame {
         JButton btnStop = new JButton("STOP");
         btnStop.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                /**
-                 * IMPLEMENTAR
-                 */
+                if (immortals != null) {
+                    // 1. Notificar a cada hilo que debe finalizar
+                    for (Immortal im : immortals) {
+                        im.stopThread();
+                    }
+
+                    // 2. Limpiar la lista para liberar recursos de la simulación
+                    immortals.clear();
+                    immortals = null;
+
+                    // 3. Reactivar el botón Start y actualizar el estado
+                    btnStart.setEnabled(true);
+                    statisticsLabel.setText("Simulación finalizada.");
+                }
             }
         });
         btnStop.setForeground(Color.RED);
